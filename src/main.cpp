@@ -10,7 +10,7 @@
 // #defines
 // 各要素の使用／不使用を切り替え
 
-#define USE_ESPNow                   // ESPNowを使用する場合
+// #define USE_ESPNow                   // ESPNowを使用する場合
 
 #define USE_LED                      // LEDを使用する場合（Grove経由でLEDテープおよびNeoHEXを点灯させる想定）
 
@@ -23,6 +23,22 @@
 // ================================== End
 
 // ==================================
+// USE GPIO PIN
+
+/**
+ * 
+ * 25 Atom Liteの背面のGPIO
+ * 26 Atom LiteのGroveポート
+ * 27 Atom 内部のLED用
+ */
+
+#define ATOM_LED_PIN  27      // ATOM Lite本体のLED用
+#define NEOPIXEL_PIN  26      // NeoPixel LED用
+#define SERVO_360_PIN 25      // サーボモーター用
+
+// ================================== End
+
+// ==================================
 // for SystemConfig
 #include <Stackchan_system_config.h>          // stack-chanの初期設定ファイルを扱うライブラリ
 StackchanSystemConfig system_config;          // (Stackchan_system_config.h) プログラム内で使用するパラメータをYAMLから読み込むクラスを定義
@@ -31,13 +47,12 @@ StackchanSystemConfig system_config;          // (Stackchan_system_config.h) プ
 // ==================================
 // for LED
 #include <FastLED.h>
-#define ATOM_LED_PIN 27       // Atom Body
 #define ATOM_NUM_LEDS 1       // Atom LED
-#define NEOPIXEL_PIN 26       // Grobe Pin
 #define NEOHEX_NUM_LEDS 37    // HEX LED
 #define NEOTAPE_NUM_LEDS 29   // TAPE LED
+#define EXTRA_NUM_LEDS NEOHEX_NUM_LEDS + NEOTAPE_NUM_LEDS // HEX LEDとTAPE LEDを連結して使用する場合
 
-const int EXTRA_NUM_LEDS = NEOHEX_NUM_LEDS + NEOTAPE_NUM_LEDS;
+// const int EXTRA_NUM_LEDS = NEOHEX_NUM_LEDS + NEOTAPE_NUM_LEDS;
 
 static CRGB atom_leds[ATOM_NUM_LEDS];
 static CRGB extra_leds[EXTRA_NUM_LEDS];
@@ -130,9 +145,6 @@ unsigned long interval360 = 0;
 
 int servo360_speed = 0; // 360サーボの速度用変数
 
-const int SERVO_360_PIN = 25;  // Atom Liteの背面のGPIO  25
-// const int SERVO_360_PIN = 26;  // Atom LiteのGroveポート 26
-
 // ================================== End
 
 // ==================================
@@ -186,54 +198,50 @@ void servoTestRunningMode(unsigned long currentMillis) {
 #include <esp_now.h>
 #include <WiFi.h>
 
-#define CHANNEL 1
+// #define CHANNEL 1
 
 // Init ESP Now with fallback
-void InitESPNow() {
-  WiFi.disconnect();
-  if (esp_now_init() == ESP_OK) {
-    Serial.println("ESPNow Init Success");
-  }
-  else {
-    Serial.println("ESPNow Init Failed");
-    // Retry InitESPNow, add a counte and then restart?
-    // InitESPNow();
-    // or Simply Restart
-    ESP.restart();
-  }
-}
+// void InitESPNow() {
+//   WiFi.disconnect();
+//   if (esp_now_init() == ESP_OK) {
+//     Serial.println("ESPNow Init Success");
+//   }
+//   else {
+//     Serial.println("ESPNow Init Failed");
+//     // Retry InitESPNow, add a counte and then restart?
+//     // InitESPNow();
+//     // or Simply Restart
+//     ESP.restart();
+//   }
+// }
 
 // config AP SSID
-void configDeviceAP() {
-  const char *SSID = "Slave_1";
-  bool result = WiFi.softAP(SSID, "Slave_1_Password", CHANNEL, 0);
-  if (!result) {
-    Serial.println("AP Config failed.");
-  } else {
-    Serial.println("AP Config Success. Broadcasting with AP: " + String(SSID));
-    Serial.print("AP CHANNEL "); Serial.println(WiFi.channel());
-  }
-}
+// void configDeviceAP() {
+//   const char *SSID = "Slave_1";
+//   bool result = WiFi.softAP(SSID, "Slave_1_Password", CHANNEL, 0);
+//   if (!result) {
+//     Serial.println("AP Config failed.");
+//   } else {
+//     Serial.println("AP Config Success. Broadcasting with AP: " + String(SSID));
+//     Serial.print("AP CHANNEL "); Serial.println(WiFi.channel());
+//   }
+// }
 
-void onDataReceive(const uint8_t* mac_addr, const uint8_t* data, int data_len) {
-  M5.update();
-  char macStr[18];
-  snprintf(macStr, sizeof(macStr), "%02X:%02X:%02X:%02X:%02X:%02X",
-           mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
+// void onDataReceive(const uint8_t* mac_addr, const uint8_t* data, int data_len) {
+//   // M5.update();
+//   char macStr[18];
+//   snprintf(macStr, sizeof(macStr), "%02X:%02X:%02X:%02X:%02X:%02X",
+//            mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
 
-  Serial.print("Last Packet Recv from: "); Serial.println(macStr);
-  Serial.print("Last Packet Recv Data: "); Serial.println(*data);
+//   Serial.print("Last Packet Recv from: "); Serial.println(macStr);
+//   Serial.print("Last Packet Recv Data: "); Serial.println(*data);
 
-  // M5.Lcd.setCursor(0, 60);
-  // M5.Lcd.printf("Data 1 : %d", data[0]);
-  // M5.Lcd.setCursor(0, 80);
-  // M5.Lcd.printf("Data 2 : %d", data[1]);
-  if (data[0] == 0)      setLed(CRGB::Blue);
-  else if (data[0] == 1) setLed(CRGB::Green);
-  else if (data[0] == 2) setLed(CRGB::Pink);
-  else                   setLed(CRGB::Black);
+//   if (data[0] == 0)      setLed(CRGB::Blue);
+//   else if (data[0] == 1) setLed(CRGB::Green);
+//   else if (data[0] == 2) setLed(CRGB::Pink);
+//   else                   setLed(CRGB::Black);
 
-}
+// }
 // ================================== End
 
 // ----------------------------------------------
@@ -256,16 +264,25 @@ void setup() {
   // ---------------------------------------------------------------
 #ifdef USE_ESPNow
   //Set device in AP mode to begin with
-  WiFi.mode(WIFI_AP);
+  // -> change WIFI_STA
+  WiFi.mode(WIFI_STA);
+
+  WiFi.disconnect();
+  if (esp_now_init() == ESP_OK) {
+      Serial.println("ESP-Now Init Success");
+  }
+  esp_now_register_recv_cb(onDataReceive);
+
   // configure device AP mode
-  configDeviceAP();
-  // This is the mac address of the Slave in AP Mode
-  Serial.print("AP MAC: "); Serial.println(WiFi.softAPmacAddress());
+  // configDeviceAP();
+
+  // Serial.print("AP MAC: ");
+  // Serial.println(WiFi.softAPmacAddress());
 
   // Init ESPNow with a fallback logic
-  InitESPNow();
+  // InitESPNow();
   // Once ESPNow is successfully Init, we will register for recv CB to get recv packer info.
-  esp_now_register_recv_cb(onDataReceive);
+  // esp_now_register_recv_cb(onDataReceive);
 #endif
 
   // ---------------------------------------------------------------
