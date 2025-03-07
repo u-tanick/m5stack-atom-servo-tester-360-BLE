@@ -7,90 +7,75 @@
 // ================================== End
 
 // ==================================
-// #defines
-// 各要素の使用／不使用を切り替え
-
-// #define USE_ESPNow                   // ESPNowを使用する場合
-
-#define USE_LED                      // LEDを使用する場合（Grove経由でLEDテープおよびNeoHEXを点灯させる想定）
-
-#define USE_Servo                    // サーボモーターを使用する場合（背面のGPIOから360度サーボモーターを動かす想定）
-
-#define USE_Servo_360_TowerPro       // 使用するサーボモーターのメーカーごとのパラメータ設定。3種から選択。
-// #define USE_Servo_360_Feetech360
-// #define USE_Servo_360_M5Stack
-
-// ================================== End
-
-// ==================================
-// USE GPIO PIN
-
-/**
- * 
- * 25 Atom Liteの背面のGPIO
- * 26 Atom LiteのGroveポート
- * 27 Atom 内部のLED用
- */
-
-#define ATOM_LED_PIN  27      // ATOM Lite本体のLED用
-#define NEOPIXEL_PIN  26      // NeoPixel LED用
-#define SERVO_360_PIN 25      // サーボモーター用
-
-// ================================== End
-
-// ==================================
 // for SystemConfig
 #include <Stackchan_system_config.h>          // stack-chanの初期設定ファイルを扱うライブラリ
 StackchanSystemConfig system_config;          // (Stackchan_system_config.h) プログラム内で使用するパラメータをYAMLから読み込むクラスを定義
 // ================================== End
 
 // ==================================
-// for LED
-#include <FastLED.h>
-#define ATOM_NUM_LEDS 1       // Atom LED
-#define NEOHEX_NUM_LEDS 37    // HEX LED
-#define NEOTAPE_NUM_LEDS 29   // TAPE LED
-#define EXTRA_NUM_LEDS NEOHEX_NUM_LEDS + NEOTAPE_NUM_LEDS // HEX LEDとTAPE LEDを連結して使用する場合
+// #defines
+// 各要素の使用／不使用を切り替え
 
-// const int EXTRA_NUM_LEDS = NEOHEX_NUM_LEDS + NEOTAPE_NUM_LEDS;
+#define USE_LED                      // LEDを使用する場合（Grove経由でLEDテープおよびNeoHEXを点灯させる想定）
 
-static CRGB atom_leds[ATOM_NUM_LEDS];
-static CRGB extra_leds[EXTRA_NUM_LEDS];
+#define USE_Servo                    // サーボモーターを使用する場合（背面のGPIOから360度サーボモーターを動かす想定）
+#define USE_Servo_360_TowerPro       // 使用するサーボモーターのメーカーごとのパラメータ設定。3種から選択。
+// #define USE_Servo_360_Feetech360
+// #define USE_Servo_360_M5Stack
 
-uint8_t gHue = 0;             // Initial tone value.
-
-bool isLedON = false;  // サーボ動作のフラグ
-
-// Atom本体のLEDを光らせる用の関数
-void setLed(CRGB color)
-{
-  // change RGB to GRB
-  uint8_t t = color.r;
-  color.r = color.g;
-  color.g = t;
-  atom_leds[0] = color;
-  FastLED.show();
-}
-
-// ランダムモード開始時にタイマーをリセット
-void startLED() {
-  isLedON = true;
-}
-
-// ランダムモード開始時にタイマーをリセット
-void flashLedMode() {
-  fill_rainbow_circular(extra_leds, EXTRA_NUM_LEDS, gHue, 7);
-  FastLED.show();  // Updated LED color.
-  EVERY_N_MILLISECONDS(20)
-  {
-    gHue++;
-  }  // The program is executed every 20 milliseconds.
-}
-
+#define USE_ESPNow                      // ESPNowを使用する場合
 // ================================== End
 
 // ==================================
+// for LED
+#ifdef USE_LED
+  #include <FastLED.h>
+  #define ATOM_LED_PIN  27      // ATOM Lite本体のLED用
+  #define NEOPIXEL_PIN  26      // NeoPixel LED用
+  #define ATOM_NUM_LEDS 1       // Atom LED
+  #define NEOHEX_NUM_LEDS 37    // HEX LED
+  #define NEOTAPE_NUM_LEDS 29   // TAPE LED
+  #define EXTRA_NUM_LEDS NEOHEX_NUM_LEDS + NEOTAPE_NUM_LEDS // HEX LEDとTAPE LEDを連結して使用する場合
+  
+  static CRGB atom_leds[ATOM_NUM_LEDS];
+  static CRGB extra_leds[EXTRA_NUM_LEDS];
+  
+  uint8_t gHue = 0;             // Initial tone value.
+  
+  bool isLedON = false;  // サーボ動作のフラグ
+
+  // Atom本体のLEDを光らせる用の関数
+  void setLed(CRGB color)
+  {
+    // change RGB to GRB
+    uint8_t t = color.r;
+    color.r = color.g;
+    color.g = t;
+    atom_leds[0] = color;
+    FastLED.show();
+  }
+
+  // LED点灯開始
+  void startLED() {
+    isLedON = true;
+  }
+  
+  // LED点灯モード制御
+  void flashLedMode() {
+    fill_rainbow_circular(extra_leds, EXTRA_NUM_LEDS, gHue, 7);
+    FastLED.show();  // Updated LED color.
+    EVERY_N_MILLISECONDS(20)
+    {
+      gHue++;
+    }  // The program is executed every 20 milliseconds.
+  }
+#endif
+// ================================== End
+
+
+// ==================================
 // for Servo
+#ifdef USE_LED
 #include <ServoEasing.hpp>
 
 /**
@@ -112,6 +97,7 @@ void flashLedMode() {
  * 反時計周り : 1500 - 2500US : 90 - 180度
 */
 
+#define SERVO_360_PIN 25      // サーボモーター用
 ServoEasing servo360;  // 360度サーボ
 
 // サーボの種類毎のPWM幅や初期角度、回転速度のレンジ設定など
@@ -191,145 +177,114 @@ void servoTestRunningMode(unsigned long currentMillis) {
     count_360 = (count_360 + 1) % 99;
   }
 }
+#endif
 // ================================== End
 
 // ==================================
 // for ESPNow
-#include <esp_now.h>
-#include <WiFi.h>
+#ifdef USE_ESPNow
+#include <WiFi.h>  // ESPNOWを使う場合はWiFiも必要
+#include <esp_now.h> // ESPNOW本体
 
-// #define CHANNEL 1
+// ESP-NOW受信時に呼ばれる関数
+void OnDataReceived(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
 
-// Init ESP Now with fallback
-// void InitESPNow() {
-//   WiFi.disconnect();
-//   if (esp_now_init() == ESP_OK) {
-//     Serial.println("ESPNow Init Success");
-//   }
-//   else {
-//     Serial.println("ESPNow Init Failed");
-//     // Retry InitESPNow, add a counte and then restart?
-//     // InitESPNow();
-//     // or Simply Restart
-//     ESP.restart();
-//   }
-// }
+  char macStr[18];
+  snprintf(macStr, sizeof(macStr), "%02X:%02X:%02X:%02X:%02X:%02X",
+           mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
 
-// config AP SSID
-// void configDeviceAP() {
-//   const char *SSID = "Slave_1";
-//   bool result = WiFi.softAP(SSID, "Slave_1_Password", CHANNEL, 0);
-//   if (!result) {
-//     Serial.println("AP Config failed.");
-//   } else {
-//     Serial.println("AP Config Success. Broadcasting with AP: " + String(SSID));
-//     Serial.print("AP CHANNEL "); Serial.println(WiFi.channel());
-//   }
-// }
+  Serial.print("Last Packet Recv from: "); Serial.println(macStr);
+  Serial.print("Last Packet Recv Data: "); Serial.println(*data);
 
-// void onDataReceive(const uint8_t* mac_addr, const uint8_t* data, int data_len) {
-//   // M5.update();
-//   char macStr[18];
-//   snprintf(macStr, sizeof(macStr), "%02X:%02X:%02X:%02X:%02X:%02X",
-//            mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
-
-//   Serial.print("Last Packet Recv from: "); Serial.println(macStr);
-//   Serial.print("Last Packet Recv Data: "); Serial.println(*data);
-
-//   if (data[0] == 0)      setLed(CRGB::Blue);
-//   else if (data[0] == 1) setLed(CRGB::Green);
-//   else if (data[0] == 2) setLed(CRGB::Pink);
-//   else                   setLed(CRGB::Black);
-
-// }
+  if (data[0] == 1) {
+    if (!isRandomRunning || !isLedON) {
+      #ifdef USE_Servo
+        startRandomMode();
+      #endif
+      #ifdef USE_LED
+        setLed(CRGB::Blue);
+        startLED();
+      #endif
+    } else {
+      #ifdef USE_Servo
+        servo360.startEaseTo(START_DEGREE_VALUE_SERVO_360);  // 360°サーボを停止
+        isRandomRunning = false;
+      #endif
+      #ifdef USE_LED
+        FastLED.clear();  // Set All LED Black color.
+        FastLED.show();   // Updated LED color.
+        isLedON = false;
+      #endif
+    }
+  }
+}
+#endif
 // ================================== End
 
-// ----------------------------------------------
 void setup() {
   // 設定用の情報を抽出
   auto cfg = M5.config();
-  // Groveポートの出力をしない（m5atomS3用）
-  // cfg.output_power = true;
   // M5Stackをcfgの設定で初期化
   M5.begin(cfg);
 
-  // ログ設定
-  M5.Log.setLogLevel(m5::log_target_display, ESP_LOG_NONE);    // M5Unifiedのログ初期化（画面には表示しない。)
-  M5.Log.setLogLevel(m5::log_target_serial, ESP_LOG_INFO);     // M5Unifiedのログ初期化（シリアルモニターにESP_LOG_INFOのレベルのみ表示する)
-  M5.Log.setEnableColor(m5::log_target_serial, false);         // M5Unifiedのログ初期化（ログをカラー化しない。）
-  M5_LOGI("Hello World");                                      // logにHello Worldと表示
-
   // ---------------------------------------------------------------
-  // ESPNowの初期化
+  // LEDの初期化
   // ---------------------------------------------------------------
-#ifdef USE_ESPNow
-  //Set device in AP mode to begin with
-  // -> change WIFI_STA
-  WiFi.mode(WIFI_STA);
-
-  WiFi.disconnect();
-  if (esp_now_init() == ESP_OK) {
-      Serial.println("ESP-Now Init Success");
-  }
-  esp_now_register_recv_cb(onDataReceive);
-
-  // configure device AP mode
-  // configDeviceAP();
-
-  // Serial.print("AP MAC: ");
-  // Serial.println(WiFi.softAPmacAddress());
-
-  // Init ESPNow with a fallback logic
-  // InitESPNow();
-  // Once ESPNow is successfully Init, we will register for recv CB to get recv packer info.
-  // esp_now_register_recv_cb(onDataReceive);
-#endif
+  #ifdef USE_LED
+    FastLED.addLeds<WS2811, ATOM_LED_PIN, RGB>(atom_leds, ATOM_NUM_LEDS);
+    FastLED.addLeds<WS2811, NEOPIXEL_PIN, RGB>(extra_leds, EXTRA_NUM_LEDS);
+    FastLED.setBrightness(5);
+    for (int i = 0; i < 3; i++)
+    {
+      setLed(CRGB::Red);
+      delay(500);
+      setLed(CRGB::Black);
+      delay(500);
+    }
+  #endif
 
   // ---------------------------------------------------------------
   // servoの初期化
   // ---------------------------------------------------------------
-#ifdef USE_Servo
-  M5_LOGI("attach servo");
-  ESP32PWM::allocateTimer(0);                                  // ESP32Servoはタイマーを割り当てる必要がある
+  #ifdef USE_Servo
+    M5_LOGI("attach servo");
+    ESP32PWM::allocateTimer(0);                                  // ESP32Servoはタイマーを割り当てる必要がある
 
-  servo360.setPeriodHertz(50);                                 // サーボ用のPWMを50Hzに設定
-  servo360.attach(SERVO_360_PIN, MIN_PWM_360, MAX_PWM_360);
-  servo360.setEasingType(EASE_LINEAR);                         // 一定の速度で動かす場合は EASE_LINEAR に変更
-  setSpeedForAllServos(60);
-  servo360.startEaseTo(START_DEGREE_VALUE_SERVO_360);          // 360°サーボを停止位置にセット
+    servo360.setPeriodHertz(50);                                 // サーボ用のPWMを50Hzに設定
+    servo360.attach(SERVO_360_PIN, MIN_PWM_360, MAX_PWM_360);
+    servo360.setEasingType(EASE_LINEAR);                         // 一定の速度で動かす場合は EASE_LINEAR に変更
+    setSpeedForAllServos(60);
+    servo360.startEaseTo(START_DEGREE_VALUE_SERVO_360);          // 360°サーボを停止位置にセット
 
-  M5.Power.setExtOutput(!system_config.getUseTakaoBase());     // 設定ファイルのTakaoBaseがtrueの場合は、Groveポートの5V出力をONにする。
-  M5_LOGI("ServoType: %d\n", system_config.getServoType());    // サーボのタイプをログに出力
+    M5.Power.setExtOutput(!system_config.getUseTakaoBase());     // 設定ファイルのTakaoBaseがtrueの場合は、Groveポートの5V出力をONにする。
+    M5_LOGI("ServoType: %d\n", system_config.getServoType());    // サーボのタイプをログに出力
 
-  // ランダム動作用の変数初期化、個体差を出すためMACアドレスを使用する
-  uint8_t mac[6];
-  esp_efuse_mac_get_default(mac);
-  uint32_t seed = mac[0] | (mac[1] << 8) | (mac[2] << 16) | (mac[3] << 24);
-  randomSeed(seed);
-  interval360 = random(7000, 30001); // 7秒〜30秒のランダム間隔
-#endif
+    // ランダム動作用の変数初期化、個体差を出すためMACアドレスを使用する
+    uint8_t mac[6];
+    esp_efuse_mac_get_default(mac);
+    uint32_t seed = mac[0] | (mac[1] << 8) | (mac[2] << 16) | (mac[3] << 24);
+    randomSeed(seed);
+    interval360 = random(7000, 30001); // 7秒〜30秒のランダム間隔
+  #endif
 
   // ---------------------------------------------------------------
-  // RGB LEDの初期化
+  // ESPNowの初期化
   // ---------------------------------------------------------------
-#ifdef USE_LED
-  FastLED.addLeds<WS2811, ATOM_LED_PIN, RGB>(atom_leds, ATOM_NUM_LEDS);
-  FastLED.addLeds<WS2811, NEOPIXEL_PIN, RGB>(extra_leds, EXTRA_NUM_LEDS);
-  FastLED.setBrightness(5);
+  #ifdef USE_LED
+    // WiFi初期化
+    WiFi.mode(WIFI_STA);
 
-  for (int i = 0; i < 3; i++)
-  {
-    setLed(CRGB::Blue);
-    delay(500);
-    setLed(CRGB::Black);
-    delay(500);
-  }
-#endif
+    // ESP-NOWの初期化(出来なければリセットして繰り返し)
+    if (esp_now_init() != ESP_OK) {
+      return;
+    }
+
+    // ESP-NOW受信時に呼ばれる関数の登録
+    esp_now_register_recv_cb(esp_now_recv_cb_t(OnDataReceived));
+  #endif
 }
 
-// ----------------------------------------------
 void loop() {
-
   M5.update();
 
   // === ボタンAが押されたらテスト動作モードの開始/停止を切り替え ===
@@ -351,9 +306,9 @@ void loop() {
       FastLED.show();   // Updated LED color.
       isLedON = false;
 #endif
-      }
-}
-
+    }
+  }
+  
 #ifdef USE_Servo
   if (!isRandomRunning) return;  // 停止中なら何もしない
   unsigned long currentMillis = millis();
@@ -362,8 +317,8 @@ void loop() {
   // ★テストモード（段階的に回転速度を変えるデモ）を動かしたい場合はこちらを使用
   // if (isRandomRunning) servoTestRunningMode(currentMillis);
 #endif
+
 #ifdef USE_LED
   if (isLedON) flashLedMode();
 #endif
-
 }
